@@ -221,6 +221,7 @@ namespace {
     while(tested < bound) {
       //get a route shape
       auto test_case = make_test_case();
+      test_case = "{\"costing\":\"auto\",\"locations\":[{\"lat\":52.096672,\"lon\":5.110825},{\"lat\":52.081371,\"lon\":5.125671}]}";
       boost::property_tree::ptree route;
       try { route = json_to_pt(actor.route(tyr::ROUTE, test_case)); }
       catch (...) { continue; }

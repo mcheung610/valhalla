@@ -80,7 +80,7 @@ class DoubleBucketQueue {
    */
   uint32_t pop();
 
- private:
+ //private:
   float bucketrange_;  // Total range of costs in lower level buckets
   float bucketcount_;  // Number of buckets
   float bucketsize_;   // Bucket size (range of costs in same bucket)

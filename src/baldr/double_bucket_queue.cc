@@ -1,5 +1,29 @@
 #include "baldr/double_bucket_queue.h"
 #include <algorithm>
+#include <iostream>
+
+namespace {
+
+void show(uint32_t label, const valhalla::baldr::bucket_t& prevbucket, const valhalla::baldr::DoubleBucketQueue& q) {
+  std::cout << " removing " << label << " with cost " << q.labelcost_(label) << " from bucket " << (&prevbucket - &q.buckets_.front()) << std::endl;
+  std::cout << "the current cost is " << q.currentcost_ << " the min cost is " << q.mincost_ << " the max cost is " << q.maxcost_ << std::endl;
+  for(const auto& b : q.buckets_) {
+    if(b.empty())
+      continue;
+    std::cout << "bucket " << (&b - &q.buckets_.front()) << ": ";
+    for(auto i : b)
+      std::cout << i << ",";
+    std::cout << std::endl;
+  }
+  if(q.overflowbucket_.size()){
+    std::cout << "overflow: ";
+    for(auto i : q.overflowbucket_)
+      std::cout << i << ",";
+  }
+  throw std::runtime_error("label was not found in bucket");
+}
+
+}
 
 namespace valhalla {
 namespace baldr {
@@ -58,10 +82,28 @@ void DoubleBucketQueue::decrease(const uint32_t label, const float newcost) {
   // if old cost and the new cost are in the same buckets.
   bucket_t& prevbucket = get_bucket(labelcost_(label));
   bucket_t& newbucket  = get_bucket(newcost);
+
+  int found = 0;
+  for(const auto& b : buckets_) {
+    if(b.size()) {
+      for(auto i : b) {
+        found += i == label;
+      }
+    }
+  }
+  if(found != 1) {
+    show(label, prevbucket, *this);
+    throw std::runtime_error("Found label " + std::to_string(label) + " in " + std::to_string(found) + " buckets");
+  }
+
   if (prevbucket != newbucket) {
     // Add label to newbucket and remove from previous bucket
     newbucket.push_back(label);
-    prevbucket.erase(std::remove(prevbucket.begin(), prevbucket.end(), label));
+    auto itr = std::remove(prevbucket.begin(), prevbucket.end(), label);
+    if(itr != prevbucket.end())
+      prevbucket.erase(itr);
+    else
+      show(label, prevbucket, *this);
   }
 }
 
