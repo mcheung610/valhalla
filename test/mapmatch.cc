@@ -224,7 +224,7 @@ namespace {
       test_case = "{\"costing\":\"auto\",\"locations\":[{\"lat\":52.096672,\"lon\":5.110825},{\"lat\":52.081371,\"lon\":5.125671}]}";
       boost::property_tree::ptree route;
       try { route = json_to_pt(actor.route(tyr::ROUTE, test_case)); }
-      catch (...) { continue; }
+      catch (...) { std::cout << "failed route, skipping" << std::endl; continue; }
       auto encoded_shape = route.get_child("trip.legs").front().second.get<std::string>("shape");
       auto shape = midgard::decode<std::vector<midgard::PointLL> >(encoded_shape);
       //skip any routes that have loops in them as edge walk fails in that case...
@@ -238,8 +238,10 @@ namespace {
         for(const auto& name : maneuver.second.get_child("street_names"))
           looped = looped || !names.insert(name.second.get_value<std::string>()).second;
       }
-      if(looped)
+      if(looped) {
+        std::cout << "had a loop, skipping" << std::endl;
         continue;
+      }
       //get the edges along that route shape
       boost::property_tree::ptree walked;
       try {

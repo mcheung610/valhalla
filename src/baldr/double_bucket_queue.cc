@@ -82,28 +82,28 @@ void DoubleBucketQueue::decrease(const uint32_t label, const float newcost) {
   // if old cost and the new cost are in the same buckets.
   bucket_t& prevbucket = get_bucket(labelcost_(label));
   bucket_t& newbucket  = get_bucket(newcost);
-
-  int found = 0;
-  for(const auto& b : buckets_) {
-    if(b.size()) {
-      for(auto i : b) {
-        found += i == label;
+  if (prevbucket != newbucket) {
+    int found = 0;
+    for(const auto& b : buckets_) {
+      if(b.size()) {
+        for(auto i : b) {
+          found += i == label;
+        }
       }
     }
-  }
-  if(found != 1) {
-    show(label, prevbucket, *this);
-    throw std::runtime_error("Found label " + std::to_string(label) + " in " + std::to_string(found) + " buckets");
-  }
-
-  if (prevbucket != newbucket) {
+    if(found != 1) {
+      show(label, prevbucket, *this);
+      throw std::runtime_error("Found label " + std::to_string(label) + " in " + std::to_string(found) + " buckets");
+    }
     // Add label to newbucket and remove from previous bucket
     newbucket.push_back(label);
     auto itr = std::remove(prevbucket.begin(), prevbucket.end(), label);
     if(itr != prevbucket.end())
       prevbucket.erase(itr);
-    else
+    else {
       show(label, prevbucket, *this);
+      throw std::runtime_error("wrong bucket for label");
+    }
   }
 }
 
