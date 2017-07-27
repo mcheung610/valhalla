@@ -2,29 +2,6 @@
 #include <algorithm>
 #include <iostream>
 
-namespace {
-
-void show(uint32_t label, const valhalla::baldr::bucket_t& prevbucket, const valhalla::baldr::DoubleBucketQueue& q) {
-  std::cout << " removing " << label << " with cost " << q.labelcost_(label) << " from bucket " << (&prevbucket - &q.buckets_.front()) << std::endl;
-  std::cout << "the current cost is " << q.currentcost_ << " the min cost is " << q.mincost_ << " the max cost is " << q.maxcost_ << std::endl;
-  for(const auto& b : q.buckets_) {
-    if(b.empty())
-      continue;
-    std::cout << "bucket " << (&b - &q.buckets_.front()) << ": ";
-    for(auto i : b)
-      std::cout << i << ",";
-    std::cout << std::endl;
-  }
-  if(q.overflowbucket_.size()){
-    std::cout << "overflow: ";
-    for(auto i : q.overflowbucket_)
-      std::cout << i << ",";
-  }
-  throw std::runtime_error("label was not found in bucket");
-}
-
-}
-
 namespace valhalla {
 namespace baldr {
 
@@ -40,12 +17,12 @@ DoubleBucketQueue::DoubleBucketQueue(const float mincost, const float range,
   bucketrange_ = range;
   bucketsize_ = static_cast<float>(bucketsize);
   inv_ = 1.0f / bucketsize_;
+  bucketcount_ = (range / bucketsize_) + 1;
 
   // Set the maximum cost (above this goes into the overflow bucket)
   maxcost_ = mincost + bucketrange_;
 
   // Allocate the low-level buckets
-  bucketcount_ = (range / bucketsize_) + 1;
   buckets_.resize(bucketcount_);
 
   // Set the current bucket to the lowest cost low level bucket
@@ -80,30 +57,37 @@ void DoubleBucketQueue::clear() {
 void DoubleBucketQueue::decrease(const uint32_t label, const float newcost) {
   // Get the buckets of the previous and new costs. Nothing needs to be done
   // if old cost and the new cost are in the same buckets.
-  bucket_t& prevbucket = get_bucket(labelcost_(label));
+  const auto cost = labelcost_(label);
+  if(label == 1304)
+    std::cout << this << " " << labelcost_(label) << "its going to be " << static_cast<uint32_t>((cost - mincost_) * inv_) << std::endl;
+
+  bucket_t& prevbucket = get_bucket(cost);
   bucket_t& newbucket  = get_bucket(newcost);
   if (prevbucket != newbucket) {
-    int found = 0;
-    for(const auto& b : buckets_) {
-      if(b.size()) {
-        for(auto i : b) {
-          found += i == label;
-        }
+    if(label == 1304) {
+      std::cout << this << " decreasing " << label << " with cost " << cost << " from bucket " << (&prevbucket - &buckets_.front()) << " current bucket is " << (&(*currentbucket_) - &buckets_.front()) << " current cost is " << currentcost_ << " min cost is " << mincost_ << " max cost is " << maxcost_ << std::endl;
+      for(const auto& b : buckets_) {
+        if(b.empty())
+          continue;
+        std::cout << this << "bucket " << (&b - &buckets_.front()) << ": ";
+        for(auto i : b)
+          std::cout << i << ",";
+        std::cout << std::endl;
+      }
+      if(overflowbucket_.size()){
+        std::cout << this << "overflow: ";
+        for(auto i : overflowbucket_)
+          std::cout << i << ",";
       }
     }
-    if(found != 1) {
-      show(label, prevbucket, *this);
-      throw std::runtime_error("Found label " + std::to_string(label) + " in " + std::to_string(found) + " buckets");
-    }
+
     // Add label to newbucket and remove from previous bucket
-    newbucket.push_back(label);
     auto itr = std::remove(prevbucket.begin(), prevbucket.end(), label);
     if(itr != prevbucket.end())
       prevbucket.erase(itr);
-    else {
-      show(label, prevbucket, *this);
+    else
       throw std::runtime_error("wrong bucket for label");
-    }
+    newbucket.push_back(label);
   }
 }
 
@@ -130,6 +114,8 @@ uint32_t DoubleBucketQueue::pop()  {
   // Return label from lowest non-empty bucket
   uint32_t label = currentbucket_->back();
   currentbucket_->pop_back();
+  if(label == 1304)
+    std::cout << this << " popping 1304" << std::endl;
   return label;
 }
 

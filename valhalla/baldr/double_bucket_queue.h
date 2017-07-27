@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <vector>
 #include <valhalla/midgard/util.h>
+#include <iostream>
 
 namespace valhalla {
 namespace baldr {
@@ -61,7 +62,13 @@ class DoubleBucketQueue {
    * @param   cost   Cost for this label.
    */
   void add(const uint32_t label, const float cost) {
-    get_bucket(cost).push_back(label);
+    if(label == 1304)
+      std::cout << "its going to be " << static_cast<uint32_t>((cost - mincost_) * inv_) << std::endl;
+    auto& bucket = get_bucket(cost);
+    bucket.push_back(label);
+    if(label == 1304) {      
+      std::cout << this << " adding 1304 with cost " << cost << " to bucket " << (&bucket - &buckets_.front()) << " current bucket is " << (&(*currentbucket_) - &buckets_.front()) << " current cost is " << currentcost_ << " min cost is " << mincost_ << " max cost is " << maxcost_ << std::endl;
+    }
   }
 
   /**
