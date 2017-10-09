@@ -54,6 +54,8 @@ docker up
 docker ps 
 SSH into the docker container - docker exec -it <container id> /bin/bash
 
+bundle exec rake db:migrate
+
 bundle exec rake enqueue_feed_fetcher_workers
 bundle exec rake enqueue_feed_eater_worker[f-9q9-bart,'',6]
 bundle exec rake enqueue_feed_eater_worker[f-9q9-caltrain,'',6]
