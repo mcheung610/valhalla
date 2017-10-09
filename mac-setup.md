@@ -14,7 +14,14 @@ export CXX=/usr/local/bin/c++
 export CXXCPP='/usr/local/bin/c++ -E'
 ```
 
-(Need to build these dependencies locally with the gcc compiler)
+```
+# install dependencies (czmq is required by prime_server)
+brew install autoconf automake libtool protobuf-c boost-python libspatialite pkg-config lua czmq
+# you also need to be able to link sqlite3 (at least on some versions of macOS and only if you want datatools)
+brew link sqlite3
+```
+
+(download and rebuild these dependencies)
 - boost 1.65.1 http://www.boost.org/users/history/version_1_65_1.html
 - geos 3.6.2 https://trac.osgeo.org/geos
 - protobuf c https://github.com/protobuf-c/protobuf-c
